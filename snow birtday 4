@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Happy Birthday Mehak 💖</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --primary: #ff9a9e;
+      --secondary: #fad0c4;
+      --gold: #ffd700;
+      --text: #5d4037;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #fff1eb, #ace0f9);
+      color: var(--text);
+      text-align: center;
+    }
+
+    section {
+      padding: 40px 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+    }
+
+    .wish-section {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+    }
+
+    input {
+      width: 70%;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+    }
+
+    .wish-card {
+      background: #fff0f5;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    .star {
+      font-size: 2.5rem;
+      color: #ccc;
+      cursor: pointer;
+    }
+
+    .star.active {
+      color: var(--gold);
+    }
+  </style>
+</head>
+
+<body>
+
+<section id="intro">
+  <h1>Happy Birthday Mehak 💖</h1>
+  <button onclick="startCelebration()">Tap to Start ✨</button>
+</section>
+
+<section id="main" class="hidden">
+
+  <h2>Make a Wish 🎂</h2>
+
+  <div class="wish-section">
+    <input id="wish-input" placeholder="Type a wish..." />
+    <button onclick="addWish()">Add</button>
+    <div id="wish-list"></div>
+  </div>
+
+  <h2 style="margin-top:40px;">Rate this surprise ⭐</h2>
+  <div>
+    <span class="star" onclick="rate(1)">★</span>
+    <span class="star" onclick="rate(2)">★</span>
+    <span class="star" onclick="rate(3)">★</span>
+    <span class="star" onclick="rate(4)">★</span>
+    <span class="star" onclick="rate(5)">★</span>
+  </div>
+
+  <div id="rating-text"></div>
+</section>
+
+<!-- ===================== FIREBASE + LOGIC ===================== -->
+<script type="module">
+/* ===== Firebase imports ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+/* ===== Firebase config (FIXED) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDXMZFiyUy5clth9qfm13wNbL9EOS61t2Y",
+  authDomain: "snow-birthday-2.firebaseapp.com",
+  projectId: "snow-birthday-2",
+  storageBucket: "snow-birthday-2.appspot.com",
+  messagingSenderId: "1037215535742",
+  appId: "1:1037215535742:web:048763960f091dbdcc7e2f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ===== Page control ===== */
+window.startCelebration = function () {
+  document.getElementById("intro").classList.add("hidden");
+  document.getElementById("main").classList.remove("hidden");
+};
+
+/* ===== Wishes backend ===== */
+window.addWish = async function () {
+  const input = document.getElementById("wish-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  await addDoc(collection(db, "wishes"), {
+    text,
+    time: Date.now()
+  });
+
+  input.value = "";
+};
+
+const wishQuery = query(
+  collection(db, "wishes"),
+  orderBy("time", "desc")
+);
+
+onSnapshot(wishQuery, snapshot => {
+  const list = document.getElementById("wish-list");
+  list.innerHTML = "";
+  snapshot.forEach(doc => {
+    const div = document.createElement("div");
+    div.className = "wish-card";
+    div.textContent = "✨ " + doc.data().text;
+    list.appendChild(div);
+  });
+});
+
+/* ===== Rating backend ===== */
+window.rate = async function (stars) {
+  document.querySelectorAll(".star").forEach((s, i) =>
+    s.classList.toggle("active", i < stars)
+  );
+
+  document.getElementById("rating-text").textContent =
+    `Rated ${stars}/5 💖`;
+
+  await addDoc(collection(db, "ratings"), {
+    stars,
+    time: Date.now()
+  });
+};
+</script>
+
+</body>
+</html>
